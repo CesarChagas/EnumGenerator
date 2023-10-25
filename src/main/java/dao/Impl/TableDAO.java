@@ -1,6 +1,5 @@
 package dao.Impl;
 
-import config.ConnectionFactory;
 import config.IConnectionDataBase;
 import dao.ITable;
 import model.MetaDataTableEnum;
@@ -20,11 +19,13 @@ public abstract class TableDAO implements ITable {
     private final String queryExistColumns;
     private final String queryFindAll;
 
+    private IConnectionDataBase connection;
+
     public TableDAO(IConnectionDataBase connectionDataBase, String queryExistTable, String queryExistColumns, String queryFindAll){
         this.queryExistTable = queryExistTable;
         this.queryExistColumns = queryExistColumns;
         this.queryFindAll = queryFindAll;
-        ConnectionFactory.create(connectionDataBase);
+        connection = connectionDataBase;
     }
 
     @Override
@@ -33,7 +34,7 @@ public abstract class TableDAO implements ITable {
         List<Row> rows = new ArrayList<>();
         Row row;
         var query = this.queryFindAll + tableName + " ORDER BY " + value;
-        try (Connection connection = ConnectionFactory.getConnection();
+        try (Connection connection = this.connection.connect();
              PreparedStatement preparedStatement  = connection.prepareStatement(query)  ) {
 
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -53,7 +54,7 @@ public abstract class TableDAO implements ITable {
         List<Row> rows = new ArrayList<>();
         Row row;
         var query = this.queryFindAll + metaDataTableEnum.getNameTable() + " ORDER BY " + metaDataTableEnum.getValuesEnumFromColumnName().get(0).getValueFromColumnName();
-        try (Connection connection = ConnectionFactory.getConnection();
+        try (Connection connection = this.connection.connect();
              PreparedStatement preparedStatement  = connection.prepareStatement(query)  ) {
 
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -84,7 +85,7 @@ public abstract class TableDAO implements ITable {
     public boolean existTable(final String tableName) throws Exception {
 
         var query = this.queryExistTable + "  WHERE TABLE_NAME = '" + tableName + "'";
-        try (Connection connection = ConnectionFactory.getConnection(); PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+        try (Connection connection = this.connection.connect(); PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             var resultSet = preparedStatement.executeQuery();
             return resultSet.next();
         }
@@ -97,7 +98,7 @@ public abstract class TableDAO implements ITable {
         boolean existValue = false;
         var query = this.queryExistColumns + tableName;
 
-        try (Connection connection = ConnectionFactory.getConnection();
+        try (Connection connection = this.connection.connect();
              PreparedStatement preparedStatement = connection.prepareStatement(query);
              ResultSet resultSet = preparedStatement.executeQuery()) {
 
@@ -119,7 +120,7 @@ public abstract class TableDAO implements ITable {
 
         var query = this.queryExistColumns + tableName;
 
-        try (Connection connection = ConnectionFactory.getConnection();
+        try (Connection connection = this.connection.connect();
              PreparedStatement preparedStatement = connection.prepareStatement(query);
              ResultSet resultSet = preparedStatement.executeQuery()) {
 
