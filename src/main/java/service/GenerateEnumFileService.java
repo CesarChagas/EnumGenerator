@@ -1,7 +1,7 @@
 package service;
 
-import util.FileUtil;
 import model.Row;
+import util.FileUtil;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -58,6 +58,32 @@ public class GenerateEnumFileService {
             }
             bw.newLine();
             writePropertieEnum(bw, typeProperty);
+            bw.newLine();
+            bw.write("}");
+        }
+    }
+
+    public void writeFile(File file, String enumName, List<Row> rows) throws IOException {
+
+        try (FileWriter fw = new FileWriter(file); BufferedWriter bw = new BufferedWriter(fw)) {
+            writePackageName(bw);
+            bw.newLine();
+            bw.newLine();
+            writeImports(bw);
+            bw.newLine();
+            bw.newLine();
+            writeAnnotations(bw);
+            bw.newLine();
+            writeNameEnum(bw, enumName);
+            bw.newLine();
+            bw.newLine();
+            for (Row row : rows) {
+                writeKeyAndValueEnum(bw, row, rows.get(rows.size() - 1).getKey());
+                bw.newLine();
+                bw.newLine();
+            }
+            bw.newLine();
+            writePropertieEnum(bw, rows.get(0));
             bw.newLine();
             bw.write("}");
         }
@@ -120,6 +146,30 @@ public class GenerateEnumFileService {
 
     }
 
+    private void writeKeyAndValueEnum( BufferedWriter bw, Row row, final String lastKey) throws IOException {
+        bw.write("    ");
+        bw.write(treatData(row.getKey()));
+
+        String write = "(";
+        for(var value: row.getValues()){
+            if (Objects.equals(value.getType(), TYPE_PROPERTY_LONG)) {
+                write = write.concat(value.getValueFromColumnName());
+                write = write.concat("L");
+            }
+
+            if (Objects.equals(value.getType(), TYPE_PROPERTY_STRING)) {
+                write = write.concat( "\"" );
+                write = write.concat(value.getValueFromColumnName());
+                write = write.concat("\"");
+            }
+
+            write = write.concat(", ");
+        }
+
+        write = write.substring(0, write.length()-2).concat(")");
+        bw.write(write.concat(row.getKey().equals(lastKey) ? ";" : ","));
+    }
+
     private void writePropertieEnum( BufferedWriter bw, final Integer typeProperty) throws IOException {
         bw.write("    ");
         if (Objects.equals(typeProperty,TYPE_PROPERTY_LONG)){
@@ -127,6 +177,24 @@ public class GenerateEnumFileService {
         }
         if (Objects.equals(typeProperty,TYPE_PROPERTY_STRING)){
             bw.write("private final String id;");
+        }
+    }
+
+    private void writePropertieEnum( BufferedWriter bw, final Row row) throws IOException {
+        final String[] fieldName = {"id", "description"};
+
+        for(var i = 0; i < row.getValues().size(); i++){
+            var value = row.getValues().get(i);
+
+            bw.write("    ");
+
+            if (Objects.equals(value.getType(),TYPE_PROPERTY_LONG)){
+                bw.write(String.format("private final Long %s;",fieldName[i < 1 ? 0 : 1]));
+            }
+            if (Objects.equals(value.getType(),TYPE_PROPERTY_STRING)){
+                bw.write(String.format("private final String %s%s;", fieldName[i < 1 ? 0 : 1], i < 2 ? "" : String.valueOf(i)));
+            }
+            bw.newLine();
         }
     }
 

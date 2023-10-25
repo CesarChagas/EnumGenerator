@@ -1,21 +1,22 @@
 package config;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 
 public class ConnectionFactory {
 
-    public static Connection createConnection() throws Exception {
+    private static IConnectionDataBase connection;
 
+    private ConnectionFactory(){}
 
-        String url = "jdbc:oracle:thin:@//XYZ:1521/ABC";
-        String user = "XXXXXX";
-        String password = "XXXXXX";
-
-        try {
-            return DriverManager.getConnection(url, user, password);
-        } catch (Exception e) {
-            throw new Exception("Error to generate enum: Is not possible to connect with the database");
+    public static void create(IConnectionDataBase connection){
+        if (ConnectionFactory.connection != null){
+            return;
         }
+
+        ConnectionFactory.connection = connection;
+    }
+
+    public static Connection getConnection() throws Exception{
+        return connection.connect();
     }
 }

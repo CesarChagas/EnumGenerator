@@ -4,6 +4,7 @@ target/
 !**/src/test/**/target/
 
 ### IntelliJ IDEA ###
+.idea/
 .idea/modules.xml
 .idea/jarRepositories.xml
 .idea/compiler.xml
@@ -37,3 +38,10 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### H2 ###
+*.db
+
+### Enums gerados pelo app ###
+/src/main/java/enuns/SemanaEnum.java
+/src/main/java/enuns/UnidadeFederativaEnum.java

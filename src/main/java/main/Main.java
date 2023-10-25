@@ -1,16 +1,24 @@
 package main;
 
+import model.MetaDataTableEnum;
+import model.ValueEnumFromColumnName;
 import service.GenerateEnumService;
 
+import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 
 public class Main {
 
 
     public static void main(String[] args) throws Exception {
+
+        generateFromH2DataBaseExample();
 
         var generateEnumService = new GenerateEnumService();
 
@@ -59,4 +67,43 @@ public class Main {
         return Integer.valueOf(typeProperty);
     }
 
+    public static void generateFromH2DataBaseExample() throws Exception {
+
+        System.out.println("** Generating Enum example from H2 database ... **");
+
+        var propertyFileInputStream =
+                new FileInputStream("src/main/java/main/datas-enum.properties");
+        var properties = new Properties();
+        properties.load(propertyFileInputStream);
+
+        var list = new ArrayList<MetaDataTableEnum>();
+
+        properties.forEach( (tableNameKey, property) -> {
+            var keysAndColumns = ((String)property).split("=");
+            var keyName = keysAndColumns[0];
+            var columnNames = keysAndColumns[1];
+            var columnsAndTypes = (columnNames).split(",");
+
+            var metaDataTableEnum = MetaDataTableEnum.builder()
+                    .nameTable((String) tableNameKey)
+                    .keyNameEnum(keyName)
+                    .valuesEnumFromColumnName(
+                            Arrays.stream(columnsAndTypes).map( item ->{
+                                var columnNamesAndTypes = item.split(":");
+
+                                return ValueEnumFromColumnName.builder()
+                                        .valueFromColumnName(columnNamesAndTypes[0])
+                                        .type(Integer.valueOf(columnNamesAndTypes[1]))
+                                        .build();
+                            }).collect(Collectors.toList())
+                    )
+                    .build();
+
+            list.add(metaDataTableEnum);
+        });
+
+        new GenerateEnumService().generate(list);
+
+        System.out.println("** The Enums example from H2 database was generated **");
+    }
 }
