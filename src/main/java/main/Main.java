@@ -1,5 +1,6 @@
 package main;
 
+import config.DataBaseName;
 import model.MetaDataTableEnum;
 import model.ValueEnumFromColumnName;
 import service.GenerateEnumService;
@@ -20,14 +21,13 @@ public class Main {
 
         generateFromH2DataBaseExample();
 
-        var generateEnumService = new GenerateEnumService();
-
         List<String> datasEnum = getDatasEnum();
         System.out.println();
         Integer typeProperty = getTypeValueProperty();
         System.out.println("** Generating Enum **");
 
-        String enumName = generateEnumService.generate(datasEnum.get(0), datasEnum.get(1), datasEnum.get(2), typeProperty);
+        String enumName = new GenerateEnumService(DataBaseName.Oracle)
+                .generate(datasEnum.get(0), datasEnum.get(1), datasEnum.get(2), typeProperty);
 
         System.out.println("** The Enum: "+ enumName + " was generated **");
     }
@@ -102,7 +102,7 @@ public class Main {
             list.add(metaDataTableEnum);
         });
 
-        new GenerateEnumService().generate(list);
+        new GenerateEnumService(DataBaseName.H2).generate(list);
 
         System.out.println("** The Enums example from H2 database was generated **");
     }

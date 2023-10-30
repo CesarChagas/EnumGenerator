@@ -1,7 +1,6 @@
 package service;
 
-import dao.Impl.TableH2DAO;
-import dao.Impl.TableOracleDAO;
+import config.DataBaseName;
 import model.MetaDataTableEnum;
 import model.Row;
 import model.ValueEnumFromColumnName;
@@ -15,10 +14,13 @@ public class GenerateEnumService {
 
     private final GenerateEnumFileService generateEnumFileService = new GenerateEnumFileService();
 
-    private final TableService tableH2Service = new TableService(new TableH2DAO());
+    private TableService tableService;
 
-    private final TableService tableService = new TableService(new TableOracleDAO());
+    private GenerateEnumService(){}
 
+    public GenerateEnumService(DataBaseName dataBaseName) throws Exception {
+        this.tableService = new TableService(dataBaseName);
+    }
 
     public String generate(final String tableName, final String key, final String value, final Integer typeProperty) throws Exception {
 
@@ -40,7 +42,7 @@ public class GenerateEnumService {
             String absoluteFileName = generateEnumFileService.buildAbsoluteFileName(fileName);
             File file = this.generateEnumFileService.createFile(absoluteFileName);
             String enumName = this.generateEnumFileService.constructorNameEnum(metaDataTableEnum.getNameTable());
-            List<Row> rows = this.tableH2Service.findAll(metaDataTableEnum);
+            List<Row> rows = this.tableService.findAll(metaDataTableEnum);
             this.generateEnumFileService.writeFile(file,enumName,rows);
         }
     }
@@ -55,7 +57,7 @@ public class GenerateEnumService {
     }
 
     private void validate(final MetaDataTableEnum metaDataTableEnum) throws Exception {
-        if (!this.tableH2Service.existTable(metaDataTableEnum.getNameTable())){
+        if (!this.tableService.existTable(metaDataTableEnum.getNameTable())){
             throw new Exception("Error to generate enum: The table \""
                     + metaDataTableEnum.getNameTable() + "\" is not found in the database");
         }
@@ -66,7 +68,7 @@ public class GenerateEnumService {
         valuesEnumFromColumnName.addAll(metaDataTableEnum.getValuesEnumFromColumnName().stream().map(ValueEnumFromColumnName::getValueFromColumnName).collect(Collectors.toList()));
 
         for (var valueEnumFromColumnName: valuesEnumFromColumnName){
-            if (!this.tableH2Service.existColumns(metaDataTableEnum.getNameTable(), valueEnumFromColumnName)){
+            if (!this.tableService.existColumns(metaDataTableEnum.getNameTable(), valueEnumFromColumnName)){
 
                 throw new Exception("Error to generate enum: The Columns \"" + metaDataTableEnum.getKeyNameEnum()
                         + "\" and/or \"" + valueEnumFromColumnName

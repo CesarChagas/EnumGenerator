@@ -1,6 +1,8 @@
 package service;
 
+import config.DataBaseName;
 import dao.ITable;
+import dao.Impl.TableDAO;
 import model.MetaDataTableEnum;
 import model.Row;
 
@@ -10,8 +12,8 @@ public class TableService {
 
     private final ITable tableDAO;
 
-    public TableService(ITable tableDAO){
-        this.tableDAO = tableDAO;
+    public TableService(DataBaseName dataBaseName) throws Exception {
+        this.tableDAO = new TableDAO(dataBaseName);
     }
 
     public List<Row> findAll(final String tableName, final String key, final String value) throws Exception {

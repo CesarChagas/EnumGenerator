@@ -1,5 +1,7 @@
 package dao.Impl;
 
+import config.ConnectionFactory;
+import config.DataBaseName;
 import config.IConnectionDataBase;
 import dao.ITable;
 import model.MetaDataTableEnum;
@@ -13,19 +15,31 @@ import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class TableDAO implements ITable {
+public class TableDAO implements ITable {
 
-    private final String queryExistTable;
-    private final String queryExistColumns;
-    private final String queryFindAll;
+    public static String SCHEMA = "SCHEMA_EXAMPLE";
+
+    private static String queryExistTable = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES ";
+    private static String queryExistColumns = "SELECT * FROM " + SCHEMA + ".";
+    private static String queryFindAll = "SELECT * FROM " + SCHEMA + ".";
+
+    private static final String queryExistTableOracle = "SELECT * FROM ALL_TABLES ";
+    private static final String queryExistColumnsOracle = "SELECT * FROM ";
+    private static final String queryFindAllOracle = "SELECT * FROM ";
 
     private IConnectionDataBase connection;
 
-    public TableDAO(IConnectionDataBase connectionDataBase, String queryExistTable, String queryExistColumns, String queryFindAll){
-        this.queryExistTable = queryExistTable;
-        this.queryExistColumns = queryExistColumns;
-        this.queryFindAll = queryFindAll;
-        connection = connectionDataBase;
+    private TableDAO(){}
+
+    public TableDAO(DataBaseName dataBaseName) throws Exception {
+
+        if (dataBaseName.equals(DataBaseName.Oracle)) {
+            queryExistTable = queryExistTableOracle;
+            queryExistColumns = queryExistColumnsOracle;
+            queryFindAll = queryFindAllOracle;
+        }
+
+        connection = ConnectionFactory.getConnection(dataBaseName);
     }
 
     @Override
@@ -44,7 +58,10 @@ public abstract class TableDAO implements ITable {
                 row.setValue(resultSet.getString(value.toUpperCase()));
                 rows.add(row);
             }
+        }finally {
+            ConnectionFactory.disconnection();
         }
+
         return rows;
     }
 
@@ -76,10 +93,12 @@ public abstract class TableDAO implements ITable {
                 }
                 rows.add(row);
             }
+        }finally {
+            ConnectionFactory.disconnection();
         }
+
         return rows;
     }
-
 
     @Override
     public boolean existTable(final String tableName) throws Exception {
@@ -88,6 +107,8 @@ public abstract class TableDAO implements ITable {
         try (Connection connection = this.connection.connect(); PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             var resultSet = preparedStatement.executeQuery();
             return resultSet.next();
+        }finally {
+            ConnectionFactory.disconnection();
         }
     }
 
@@ -111,7 +132,10 @@ public abstract class TableDAO implements ITable {
                     existValue = true;
                 }
             }
+        }finally {
+            ConnectionFactory.disconnection();
         }
+
         return existKey && existValue;
     }
 
@@ -131,6 +155,8 @@ public abstract class TableDAO implements ITable {
                     return true;
                 }
             }
+        }finally {
+            ConnectionFactory.disconnection();
         }
 
         return false;

@@ -45,5 +45,8 @@ build/
 *.db
 
 ### Enums gerados pelo app ###
-/src/main/java/enuns/SemanaEnum.java
-/src/main/java/enuns/UnidadeFederativaEnum.java
+/src/main/java/enuns/WeekEnum.java
+/src/main/java/enuns/AmericasCountriesEnum.java
+
+### anything ###
+sketch
